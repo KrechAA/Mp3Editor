@@ -14,9 +14,14 @@ import java.util.regex.Pattern;
 
 
 public class FileService {
-    private final StorageService storageService = new StorageService();
-    private final DisplayService displayService = new DisplayService();
 
+    private final DisplayService displayService;
+    private Pattern PATTERN = Pattern.compile("^\\d\\.\\s.$");
+    
+    public FileService(DisplayService displayService){
+        this.displayService = displayService;
+    }
+    
     public File[] getFilesFromDir(String dirPath) {
         File dir = new File(dirPath);
         return dir.listFiles();
@@ -40,7 +45,7 @@ public class FileService {
             MP3File mp3File = new MP3File(file);
 
             if (nameChecker(fileWithId)) {
-                newFileNameWithId = ifMatches(newFileNameWithId, fileWithId);
+                newFileNameWithId = addIdToFileName(fileWithId);
             } else {
                 newFileNameWithId = String
                         .valueOf((fileWithId.getId()))
@@ -52,20 +57,15 @@ public class FileService {
         return fileWithIdList;
     }
 
-    private String ifMatches(String newFileNameWithId, FileWithId fileWithId) {
-        short charCounterForCycle = 0;
-        newFileNameWithId = fileWithId.getFile().getName();
-        char[] charArr = newFileNameWithId.toCharArray();
-        for (char c : charArr) {
-            if (c == '.') {
-                break;
-            }
-            charCounterForCycle++;
-        }
+    private String addIdToFileName(FileWithId fileWithId) {
+        String newFileNameWithId = fileWithId.getFile().getName();
+
+        int charIndexOfDot = newFileNameWithId.indexOf('.');
         return newFileNameWithId = String
                 .valueOf((fileWithId.getId()))
-                .concat(". " + fileWithId.getFile().getName().substring(charCounterForCycle + 2));
+                .concat(". " + fileWithId.getFile().getName().substring(charIndexOfDot + 2));
     }
+
 
     public void changePosition(List<FileWithId> fileWithIdList) throws TagException, InvalidAudioFrameException, ReadOnlyFileException, IOException {
 
@@ -74,14 +74,12 @@ public class FileService {
         String idToStr = displayService.inputIdToForChangeFilePosition();
         int fileIdTo = Integer.parseInt(idToStr);
 
-        FileWithId fileWithIdFrom = new FileWithId(fileWithIdList.get(fileIdFrom - 1).getId(), fileWithIdList.get(fileIdFrom - 1).getFile());
-        FileWithId fileWithIdTo = new FileWithId(fileWithIdList.get(fileIdTo - 1).getId(), fileWithIdList.get(fileIdTo - 1).getFile());
         if (fileIdFrom > fileIdTo) {
-            fileWithIdList.add(fileWithIdTo.getId() - 1, fileWithIdFrom);
-            fileWithIdList.remove(fileWithIdFrom.getId());
+            fileWithIdList.add(fileIdTo - 1, fileWithIdList.get(fileIdFrom));
+            fileWithIdList.remove(fileIdFrom);
         } else {
-            fileWithIdList.add(fileWithIdTo.getId(), fileWithIdFrom);
-            fileWithIdList.remove(fileWithIdFrom.getId() - 1);
+            fileWithIdList.add(fileIdTo, fileWithIdList.get(fileIdFrom));
+            fileWithIdList.remove(fileWithIdList.remove(fileIdFrom - 1));
         }
         int counter = 0;
         String newNameWithId;
@@ -90,13 +88,11 @@ public class FileService {
             file.setId(counter);
             String newIdStr = String.valueOf(file.getId());
             if (nameChecker(file)) {
-
                 newNameWithId = String.valueOf(file.getId()).concat(". " + file.getFile().getName().substring(newIdStr.length() + 2));
-
             } else {
                 newNameWithId = String.valueOf(file.getId()).concat(". " + file.getFile().getName());
             }
-            storageService.changeFileId(file, newNameWithId);
+            changeFileId(file, newNameWithId);
         }
     }
 
@@ -148,8 +144,7 @@ public class FileService {
     }
 
     private boolean nameChecker(FileWithId fileWithId) {
-        Pattern pattern = Pattern.compile("^\\d+\\.\\s.+$");
-        Matcher matcher = pattern.matcher(fileWithId.getFile().getName());
+        Matcher matcher = PATTERN.matcher(fileWithId.getFile().getName());
         return matcher.matches();
     }
  /*   public void changeFileName(List<FileWithId> fileWithIdList) throws TagException, InvalidAudioFrameException, ReadOnlyFileException, IOException {
@@ -173,7 +168,14 @@ public class FileService {
         storageService.changeFileName(fileWithIdList.get(0));
 
     }*/
+ public void changeFileId(FileWithId fileWithId,  String newNameWithId) throws TagException, InvalidAudioFrameException, ReadOnlyFileException, IOException {
+     File fileDest = new File(fileWithId.getFile().getParentFile().getPath() + "\\" + newNameWithId);
+     fileWithId.getFile().renameTo(fileDest);
+     MP3File mp3File = new MP3File(fileDest);
+     mp3File.save(fileDest);
 
+     displayService.displayDone();
+ }
 
 
 

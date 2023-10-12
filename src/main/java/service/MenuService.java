@@ -20,7 +20,6 @@ public class MenuService {
     }
 
     public void start(String dirPath) throws TagException, InvalidAudioFrameException, ReadOnlyFileException, IOException {
-        fileService.getFilesFromDir(dirPath);
         List<FileWithId> fileWithIdList = fileService.prepareTrackListDisplay(dirPath);
         int choiceMainMenu = displayService.displayMainMenu();
         switch (choiceMainMenu) {

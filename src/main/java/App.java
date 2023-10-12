@@ -19,8 +19,8 @@ public class App {
     public static void main(String[] args) throws IOException, TagException, InvalidAudioFrameException, ReadOnlyFileException {
         logger.getParent().setLevel(Level.OFF);
 
-        FileService fileService = new FileService();
         DisplayService displayService = new DisplayService();
+        FileService fileService = new FileService(displayService);
         MenuService menuService = new MenuService(fileService, displayService);
 
         String dirPath = displayService.inputDirectory();
