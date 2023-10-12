@@ -1,2 +1,2 @@
 # Mp3Editor
-The programm to manage mp3 files.
+The program to manage mp3 files.
