@@ -91,5 +91,17 @@ public class DisplayService {
         return Integer.parseInt(choiceStr);
     }
 
+    public  int displaySubMenuSubOptions(){
+        System.out.println("\nInsert id's or \"*\" for select all track's");
+
+        Scanner in = new Scanner(System.in);
+        String choiceStr = in.nextLine();
+        if(choiceStr.equals("*")){
+            return 1;
+        }
+
+        return 2;
+    }
+
 
 }
