@@ -46,11 +46,21 @@ public class MenuService {
     public void subMenuOptionsChoice(int choice, List<FileWithId> fileWithIdList) throws TagException, InvalidAudioFrameException, ReadOnlyFileException, IOException {
         switch (choice) {
             case 1 -> fileService.changeMetaInfo(fileWithIdList, FieldKey.ARTIST);
+
             case 2 -> fileService.changeMetaInfo(fileWithIdList, FieldKey.TITLE);
             case 3 -> fileService.changeMetaInfo(fileWithIdList, FieldKey.ALBUM);
             case 4 -> fileService.changeMetaInfo(fileWithIdList, FieldKey.COMMENT);
             case 5 -> fileService.changeMetaInfo(fileWithIdList, FieldKey.GENRE);
-            case 6 -> fileService.eraseGarbage(fileWithIdList);
+            case 6 -> {
+                int subMenuSubOptionsChoice = (displayService.displaySubMenuSubOptions());
+                if (subMenuSubOptionsChoice == 1) {
+                    fileService.eraseGarbageInAllTracks(fileWithIdList);
+
+                } else {
+                    fileService.eraseGarbage(fileWithIdList);
+                }
+
+            }
         }
     }
 }

@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
 public class FileService {
 
     private final DisplayService displayService;
-    private Pattern PATTERN = Pattern.compile("^\\d\\.\\s.$");
+    private final Pattern PATTERN = Pattern.compile("^\\d\\.\\s.$");
     
     public FileService(DisplayService displayService){
         this.displayService = displayService;
@@ -101,12 +101,7 @@ public class FileService {
         List<String> idFromScannerList = Arrays.asList(IdFromScanner.split(", "));
 
         String newName = displayService.inputName();
-        List<String> nameFromScannerList = Arrays.asList(IdFromScanner.split(", "));
-        if (idFromScannerList.size() != nameFromScannerList.size()) {
-            System.out.println("Count of the id's not equals count of the names.");
-            changeMetaInfo(fileWithIdList, fieldKey);
-            return;
-        }
+
         for (String str : idFromScannerList) {
             if (Integer.parseInt(str) > idFromScannerList.size()) {
                 System.out.println("Some id is invalid");
@@ -122,13 +117,33 @@ public class FileService {
     }
 
 
-    public void eraseGarbage(List<FileWithId> fileWithIdList) throws TagException, InvalidAudioFrameException, ReadOnlyFileException, IOException {
+    public void eraseGarbageInAllTracks(List<FileWithId> fileWithIdList) throws TagException, InvalidAudioFrameException, ReadOnlyFileException, IOException {
+        String tagsFromScanner = displayService.inputTag();
+        List<String> tagsFromScannerList = Arrays.asList(tagsFromScanner.split(", "));
         String garbageFromScanner = displayService.inputGarbageName();
-        List<String> garbageFromScannerList = Arrays.asList(garbageFromScanner.split(", "));
+
+        for (FileWithId fileWithId : fileWithIdList) {
+            File file = fileWithId.getFile();
+            MP3File mp3File = new MP3File(file);
+            String oldTag = mp3File
+                    .getID3v2TagAsv24()
+                    .getFirst(FieldKey.valueOf(tagsFromScannerList.get(0)));
+            String newTag = oldTag.replace(garbageFromScanner, "");
+            mp3File.getID3v2Tag().setField(FieldKey.valueOf(tagsFromScannerList.get(0)), newTag);
+            mp3File.save(file);
+        }
+        displayService.displayDone();
+    }
+
+
+    public void eraseGarbage(List<FileWithId> fileWithIdList) throws TagException, InvalidAudioFrameException, ReadOnlyFileException, IOException {
+
         String tagsFromScanner = displayService.inputTag();
         List<String> tagsFromScannerList = Arrays.asList(tagsFromScanner.split(", "));
         String IdFromScanner = displayService.inputId();
         List<String> idFromScannerList = Arrays.asList(IdFromScanner.split(", "));
+        String garbageFromScanner = displayService.inputGarbageName();
+        List<String> garbageFromScannerList = Arrays.asList(garbageFromScanner.split(", "));
 
         for (String str : idFromScannerList) {
             File file = fileWithIdList.get(Integer.parseInt(str) - 1).getFile();
@@ -142,6 +157,9 @@ public class FileService {
         }
         displayService.displayDone();
     }
+
+
+
 
     private boolean nameChecker(FileWithId fileWithId) {
         Matcher matcher = PATTERN.matcher(fileWithId.getFile().getName());
